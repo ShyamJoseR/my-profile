@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Shyam Jose R Portfolio</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <!-- Setup / Login Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
+            </div>
+            <h1 class="auth-title" id="authTitle">Admin Login</h1>
+            <p class="auth-subtitle" id="authSubtitle">Enter your password to continue</p>
+            <form class="auth-form" id="authForm">
+                <div class="form-group" id="newPasswordGroup" style="display:none">
+                    <label for="newPassword">Create Password</label>
+                    <input type="password" id="newPassword" placeholder="Min 6 characters" minlength="6" required>
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display:none">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm password" minlength="6" required>
+                </div>
+                <div class="form-group" id="loginPasswordGroup">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter admin password" required>
+                </div>
+                <div class="auth-error" id="authError"></div>
+                <button type="submit" class="btn btn-primary btn-full" id="authBtn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="dashboard" id="dashboard" style="display:none">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <span class="topbar-logo"><span class="logo-bracket">&lt;</span>SJR<span
+                        class="logo-bracket">/&gt;</span> Admin</span>
+            </div>
+            <div class="topbar-right">
+                <a href="/" target="_blank" class="btn btn-sm btn-outline">View Site</a>
+                <button class="btn btn-sm btn-danger" id="logoutBtn">Logout</button>
+            </div>
+        </header>
+
+        <!-- Sidebar + Content -->
+        <div class="dashboard-body">
+            <aside class="sidebar" id="sidebar">
+                <nav class="sidebar-nav">
+                    <button class="sidebar-link active" data-tab="hero">🏠 Hero / Profile</button>
+                    <button class="sidebar-link" data-tab="about">📝 About Me</button>
+                    <button class="sidebar-link" data-tab="experience">💼 Experience</button>
+                    <button class="sidebar-link" data-tab="education">🎓 Education</button>
+                    <button class="sidebar-link" data-tab="skills">🛠️ Skills</button>
+                    <button class="sidebar-link" data-tab="certifications">🧠 Certifications</button>
+                    <button class="sidebar-link" data-tab="awards">🏆 Awards</button>
+                    <button class="sidebar-link" data-tab="projects">📂 Projects</button>
+                    <button class="sidebar-link" data-tab="gallery">📸 Gallery</button>
+                    <button class="sidebar-link" data-tab="contact">📫 Contact</button>
+                    <button class="sidebar-link" data-tab="theme">🎨 Theme</button>
+                    <button class="sidebar-link" data-tab="security">🔒 Security</button>
+                </nav>
+            </aside>
+
+            <main class="content" id="content">
+                <!-- HERO TAB -->
+                <div class="tab-panel active" id="tab-hero">
+                    <h2 class="panel-title">Hero / Profile</h2>
+                    <div class="form-card">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="heroName" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="heroTitleInput" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Tagline</label>
+                            <textarea id="heroTagline" class="input" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Quote (Footer)</label>
+                            <input type="text" id="heroQuote" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Image</label>
+                            <div class="image-upload-area">
+                                <img id="profilePreview" class="image-preview" src="" alt="" style="display:none">
+                                <input type="file" id="profileImageInput" accept="image/*" class="file-input">
+                                <label for="profileImageInput" class="file-label">Choose Image</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSection('hero')">Save Hero</button>
+                    </div>
+                </div>
+
+                <!-- ABOUT TAB -->
+                <div class="tab-panel" id="tab-about">
+                    <h2 class="panel-title">About Me</h2>
+                    <div class="form-card">
+                        <div id="aboutParagraphs"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addAboutParagraph()">+ Add Paragraph</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('about')">Save About</button>
+                    </div>
+                </div>
+
+                <!-- EXPERIENCE TAB -->
+                <div class="tab-panel" id="tab-experience">
+                    <h2 class="panel-title">Work Experience</h2>
+                    <div class="form-card">
+                        <div id="experienceList"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addExperience()">+ Add Experience</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('experience')">Save Experience</button>
+                    </div>
+                </div>
+
+                <!-- EDUCATION TAB -->
+                <div class="tab-panel" id="tab-education">
+                    <h2 class="panel-title">Education</h2>
+                    <div class="form-card">
+                        <div class="form-group">
+                            <label>Degree</label>
+                            <input type="text" id="eduDegree" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>College / University</label>
+                            <input type="text" id="eduCollege" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Aggregate / CGPA</label>
+                            <input type="text" id="eduAggregate" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Timeline</label>
+                            <input type="text" id="eduTimeline" class="input">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSection('education')">Save Education</button>
+                    </div>
+                </div>
+
+                <!-- SKILLS TAB -->
+                <div class="tab-panel" id="tab-skills">
+                    <h2 class="panel-title">Skills & Technologies</h2>
+                    <div class="form-card">
+                        <div id="skillsCategories"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addSkillCategory()">+ Add Category</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('skills')">Save Skills</button>
+                    </div>
+                </div>
+
+                <!-- CERTIFICATIONS TAB -->
+                <div class="tab-panel" id="tab-certifications">
+                    <h2 class="panel-title">Certifications</h2>
+                    <div class="form-card">
+                        <div id="certificationsList"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addCertification()">+ Add Certification</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('certifications')">Save
+                            Certifications</button>
+                    </div>
+                </div>
+
+                <!-- AWARDS TAB -->
+                <div class="tab-panel" id="tab-awards">
+                    <h2 class="panel-title">Awards & Recognition</h2>
+                    <div class="form-card">
+                        <div id="awardsList"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addAward()">+ Add Award</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('awards')">Save Awards</button>
+                    </div>
+                </div>
+
+                <!-- PROJECTS TAB -->
+                <div class="tab-panel" id="tab-projects">
+                    <h2 class="panel-title">Projects</h2>
+                    <div class="form-card">
+                        <div id="projectsList"></div>
+                        <button class="btn btn-outline btn-sm" onclick="addProject()">+ Add Project</button>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="saveSection('projects')">Save Projects</button>
+                    </div>
+                </div>
+
+                <!-- GALLERY TAB -->
+                <div class="tab-panel" id="tab-gallery">
+                    <h2 class="panel-title">Gallery – Certificates & Awards Images</h2>
+                    <div class="form-card">
+                        <div class="upload-section">
+                            <h3>Upload New Image</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select id="galleryCategory" class="input">
+                                        <option value="certificate">Certificate</option>
+                                        <option value="award">Award</option>
+                                        <option value="general">General</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Caption</label>
+                                    <input type="text" id="galleryCaption" class="input" placeholder="Optional caption">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="file" id="galleryImageInput" accept="image/*,.pdf" class="file-input">
+                                <label for="galleryImageInput" class="file-label">Choose Image</label>
+                                <span id="galleryFileName" class="file-name"></span>
+                            </div>
+                            <button class="btn btn-primary" onclick="uploadGalleryImage()">Upload</button>
+                        </div>
+                        <hr>
+                        <h3>Uploaded Images</h3>
+                        <div class="gallery-admin-grid" id="galleryAdminGrid">
+                            <p class="empty-state">No images uploaded yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THEME TAB -->
+                <div class="tab-panel" id="tab-theme">
+                    <h2 class="panel-title">Theme Settings</h2>
+                    <div class="form-card">
+                        <div class="theme-options">
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="dark">
+                                <div class="theme-preview theme-dark">
+                                    <div class="theme-name">Dark</div>
+                                    <div class="theme-desc">Deep navy with blue & purple accents</div>
+                                </div>
+                            </label>
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="light">
+                                <div class="theme-preview theme-light">
+                                    <div class="theme-name">Light</div>
+                                    <div class="theme-desc">Clean white with blue accents</div>
+                                </div>
+                            </label>
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="modern">
+                                <div class="theme-preview theme-modern">
+                                    <div class="theme-name">Modern</div>
+                                    <div class="theme-desc">Deep dark with neon teal & purple</div>
+                                </div>
+                            </label>
+                        </div>
+                        <br>
+                        <button class="btn btn-primary" onclick="saveTheme()">Apply Theme</button>
+                    </div>
+                </div>
+
+                <!-- SECURITY TAB -->
+                <div class="tab-panel" id="tab-security">
+                    <h2 class="panel-title">Change Password</h2>
+                    <div class="form-card">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPass" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPass" class="input" minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPass" class="input" minlength="6">
+                        </div>
+                        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+                    </div>
+                </div>
+
+                <!-- CONTACT TAB -->
+                <div class="tab-panel" id="tab-contact">
+                    <h2 class="panel-title">Contact Information</h2>
+                    <div class="form-card">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="contactEmail" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="contactPhone" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" id="contactLocation" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>LinkedIn URL</label>
+                            <input type="url" id="contactLinkedin" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub URL</label>
+                            <input type="url" id="contactGithub" class="input">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSection('contact')">Save Contact</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Toast notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+{
+  "theme": "dark",
+  "hero": {
+    "name": "Shyam Jose R",
+    "title": "Technical Specialist",
+    "tagline": "Cloud-Native & AI Enthusiast | Kafka & Microservices Specialist | Java Springboot and Quarkus Technician | SDET & Automation Expert | Cards & Payments Domain",
+    "quote": "Bridging technology and domain to deliver scalable, secure, and future-ready solutions.",
+    "profileImage": "/uploads/e99469f7-c45f-4a58-b68a-ff8c78ec01aa.jpg"
+  },
+  "about": {
+    "paragraphs": [
+      "I'm a versatile software engineer with 10+ years of experience designing, building, and optimizing cloud-native applications in the Cards and Payments domain.",
+      "I specialize in backend systems using Java (Spring Boot & Quarkus) and Apache Kafka, and I follow modern architecture patterns like Hexagonal Architecture and event-driven design to ensure scalable and maintainable solutions.",
+      "What sets me apart is my hybrid engineering mindset — I bring the depth of a developer and the precision of a test engineer, with strong experience in CI/CD, automation frameworks, performance tuning, and cloud-native deployments."
+    ]
+  },
+  "experience": [
+    {
+      "company": "Fiserv India",
+      "role": "Tech Specialist",
+      "period": "Jan 2020 – Present",
+      "description": "Building robust cloud-native microservices for the payments sector. Architecting event-driven systems using Apache Kafka for high-throughput processing. Optimizing application performance and ensuring scalable deployments on cloud platforms.",
+      "highlights": [
+        "Architected microservices for real-time card clearing using Kafka event streaming and Spring Boot",
+        "Developed event-driven services supporting credit card lifecycle activities using cloud-native patterns",
+        "Implemented secure and compliant upgrades in mission-critical credit card platforms"
+      ]
+    },
+    {
+      "company": "Expleo Solutions Pvt Ltd",
+      "role": "Co-ordinator",
+      "period": "Jun 2019 – Dec 2019",
+      "description": "Coordinated testing and automation initiatives, ensuring quality delivery across projects.",
+      "highlights": [
+        "Led test coordination and automation framework design",
+        "Streamlined QA processes across multiple project teams"
+      ]
+    },
+    {
+      "company": "Accenture Solutions Pvt Ltd",
+      "role": "Senior Software Engineer",
+      "period": "Dec 2013 – May 2019",
+      "description": "Designed and developed enterprise software solutions with a focus on quality engineering and automation frameworks.",
+      "highlights": [
+        "Received Innovator Award for the Exide Project",
+        "Recognized as Catalyst – Architect & Mentor",
+        "Built automation frameworks and performance testing solutions"
+      ]
+    }
+  ],
+  "education": {
+    "college": "RMD Engineering College – Anna University",
+    "degree": "B.E. in Electronics and Communication Engineering",
+    "aggregate": "8.80 CGPA",
+    "timeline": "Aug 2009 – Jun 2013"
+  },
+  "skills": {
+    "Languages & Frameworks": [
+      "Java 11/17",
+      "Spring Boot",
+      "Quarkus",
+      "REST APIs",
+      "Cucumber",
+      "JUnit",
+      "TestNG"
+    ],
+    "Cloud & DevOps": [
+      "GitLab CI/CD",
+      "GitHub Actions",
+      "Argo CD",
+      "Docker",
+      "Kubernetes",
+      "Dynatrace",
+      "Splunk"
+    ],
+    "Architecture & Patterns": [
+      "Microservices",
+      "Event-Driven Architecture",
+      "Hexagonal Architecture",
+      "Domain-Driven Design"
+    ],
+    "Automation & Testing": [
+      "REST Assured",
+      "Kafka Automation Framework",
+      "Mainframe Testing (VBA)",
+      "Performance Testing"
+    ],
+    "AI & Productivity": [
+      "GitHub Copilot",
+      "ChatGPT",
+      "Tool Optimization"
+    ],
+    "Domain Expertise": [
+      "Card Clearing",
+      "Event Management",
+      "Credit Lifecycle (Issuance → Settlement)"
+    ]
+  },
+  "certifications": [
+    {
+      "name": "Cloud Computing Masterclass",
+      "issuer": "Caltech CTME",
+      "link": "https://certificates.simplicdn.net/share/7806070_38498571737602522692.pdf",
+      "image": null
+    },
+    {
+      "name": "REST Assured API Testing",
+      "issuer": "Udemy",
+      "link": "https://udemy-certificate.s3.amazonaws.com/pdf/UC-6851ce2c-9f79-45db-bfa6-613f70430a39.pdf",
+      "image": null
+    },
+    {
+      "name": "Credit Card for Bankers",
+      "issuer": "IIBF",
+      "link": null,
+      "image": null
+    },
+    {
+      "name": "Cucumber BDD & Automation Framework Design",
+      "issuer": "Udemy",
+      "link": "https://udemy-certificate.s3.amazonaws.com/pdf/UC-b7571224-594d-454b-9a44-8ab44407e391.pdf",
+      "image": null
+    },
+    {
+      "name": "DevOps, CI/CD Foundations",
+      "issuer": "Udemy",
+      "link": "https://udemy-certificate.s3.amazonaws.com/pdf/UC-9f95be83-7688-44a4-84c7-48e6db270aae.pdf",
+      "image": null
+    }
+  ],
+  "awards": [
+    {
+      "name": "Inspire & Achieve Excellence",
+      "issuer": "Fiserv",
+      "image": null
+    },
+    {
+      "name": "Deliver on the Promise of One Fiserv",
+      "issuer": "Fiserv",
+      "image": null
+    },
+    {
+      "name": "Innovator Award",
+      "issuer": "Accenture (Exide Project)",
+      "image": null
+    },
+    {
+      "name": "Catalyst – Architect & Mentor",
+      "issuer": "Accenture",
+      "image": null
+    }
+  ],
+  "projects": [
+    {
+      "name": "VisionNext – Card Clearing & Settlement",
+      "period": "2024 – Present",
+      "description": "Architected microservices for real-time clearing using Kafka event streaming and Spring Boot."
+    },
+    {
+      "name": "VisionNext – Event Management Platform",
+      "period": "2023 – 2024",
+      "description": "Developed event-driven services that support credit card lifecycle activities using cloud-native patterns."
+    },
+    {
+      "name": "FirstVision – Compliance Releases",
+      "period": "2020 – 2022",
+      "description": "Implemented secure and compliant upgrades in a mission-critical credit card platform."
+    }
+  ],
+  "contact": {
+    "email": "shyamjose.r@gmail.com",
+    "phone": "+91 9487094203",
+    "location": "Chennai, India",
+    "linkedin": "https://www.linkedin.com/in/shyam-jose-r-01ab9663/",
+    "github": "https://github.com/ShyamJoseR"
+  },
+  "gallery": [
+    {
+      "id": "e02952a3-fee5-4db5-ad50-7c629da07eda",
+      "category": "certificate",
+      "filename": "e784902b-cc81-4bce-bae7-42aecb12d7b2.jpg",
+      "originalName": "Accenture Certificate 1.jpg",
+      "caption": "Rising Star",
+      "uploadedAt": "2026-03-06T18:30:45.450Z"
+    },
+    {
+      "id": "daf2d84e-4353-4b42-b017-52cc30efd8d5",
+      "category": "profile",
+      "filename": "e99469f7-c45f-4a58-b68a-ff8c78ec01aa.jpg",
+      "originalName": "Profile_Pic.jpg",
+      "caption": "Profile Picture",
+      "uploadedAt": "2026-03-06T18:31:51.350Z"
+    }
+  ]
+}

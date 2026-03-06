@@ -1,0 +1,20 @@
+{
+  "name": "shyam-jose-r-portfolio",
+  "version": "1.0.0",
+  "description": "Personal portfolio website for Shyam Jose R",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "author": "Shyam Jose R",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.1.0"
+  }
+}

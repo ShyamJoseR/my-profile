@@ -176,8 +176,8 @@
         section.style.display = '';
         const container = document.getElementById('galleryGrid');
         container.innerHTML = gallery.map(item => `
-      <div class="gallery-item" data-lightbox data-src="/uploads/${item.filename}" data-caption="${escapeHtml(item.caption || item.originalName || '')}">
-        <img src="/uploads/${item.filename}" alt="${escapeHtml(item.caption || '')}">
+      <div class="gallery-item" data-lightbox data-src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" data-caption="${escapeHtml(item.caption || item.originalName || '')}">
+        <img src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" alt="${escapeHtml(item.caption || '')}">
         ${item.caption ? `<div class="gallery-caption">${escapeHtml(item.caption)}</div>` : ''}
       </div>
     `).join('');

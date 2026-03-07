@@ -417,7 +417,7 @@ function renderGalleryAdmin() {
     }
     container.innerHTML = items.map(item => `
     <div class="gallery-admin-item">
-      <img src="/uploads/${item.filename}" alt="${escAttr(item.caption || '')}">
+      <img src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" alt="${escAttr(item.caption || '')}">
       <div class="gallery-admin-item-info">
         <span class="gallery-admin-item-caption">${escHtml(item.caption || item.originalName || '')}</span>
         <button class="gallery-delete-btn" onclick="deleteGalleryImage('${item.id}')">✕</button>
@@ -495,7 +495,7 @@ async function saveSection(section) {
                 const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: fd });
                 const uploadData = await uploadRes.json();
                 if (uploadRes.ok) {
-                    payload.hero.profileImage = `/uploads/${uploadData.image.filename}`;
+                    payload.hero.profileImage = uploadData.image.filename.startsWith('http') ? uploadData.image.filename : `/uploads/${uploadData.image.filename}`;
                 }
             }
             break;

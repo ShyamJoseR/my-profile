@@ -25,75 +25,75 @@ async function init() {
 }
 
 // ---- Auth Modes ----
+// Dynamic MFA means no "setup" mode is ever needed.
 function showSetupMode() {
-    document.getElementById('authScreen').style.display = '';
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('authTitle').textContent = 'Welcome! Set Up Admin';
-    document.getElementById('authSubtitle').textContent = 'Create a secure password for your admin panel';
-    document.getElementById('loginPasswordGroup').style.display = 'none';
-    document.getElementById('newPasswordGroup').style.display = '';
-    document.getElementById('confirmPasswordGroup').style.display = '';
-    document.getElementById('authBtn').textContent = 'Create Password';
-
-    document.getElementById('loginPassword').required = false;
-    document.getElementById('newPassword').required = true;
-    document.getElementById('confirmPassword').required = true;
-
-    document.getElementById('authForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const pw = document.getElementById('newPassword').value;
-        const cpw = document.getElementById('confirmPassword').value;
-        if (pw !== cpw) return showAuthError('Passwords do not match');
-        if (pw.length < 6) return showAuthError('Min 6 characters');
-        try {
-            const res = await fetch('/api/setup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                showDashboard();
-            } else {
-                showAuthError(data.error);
-            }
-        } catch {
-            showAuthError('Connection error');
-        }
-    };
+    showLoginMode();
 }
 
 function showLoginMode() {
     document.getElementById('authScreen').style.display = '';
     document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('authTitle').textContent = 'Admin Login';
-    document.getElementById('authSubtitle').textContent = 'Enter your password to continue';
-    document.getElementById('loginPasswordGroup').style.display = '';
-    document.getElementById('newPasswordGroup').style.display = 'none';
-    document.getElementById('confirmPasswordGroup').style.display = 'none';
-    document.getElementById('authBtn').textContent = 'Login';
-
-    document.getElementById('loginPassword').required = true;
-    document.getElementById('newPassword').required = false;
-    document.getElementById('confirmPassword').required = false;
+    document.getElementById('authCardLogin').style.display = '';
+    document.getElementById('authCardOtp').style.display = 'none';
 
     document.getElementById('authForm').onsubmit = async (e) => {
         e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
         const pw = document.getElementById('loginPassword').value;
+
+        const btn = document.getElementById('authBtn');
+        const origText = btn.textContent;
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+
         try {
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
+                body: JSON.stringify({ email, gmailAppPassword: pw })
             });
             const data = await res.json();
+
+            btn.textContent = origText;
+            btn.disabled = false;
+
+            if (res.ok && data.mfaRequired) {
+                showOtpMode();
+            } else {
+                showAuthError(data.error || 'Authentication error');
+            }
+        } catch {
+            btn.textContent = origText;
+            btn.disabled = false;
+            showAuthError('Connection error');
+        }
+    };
+}
+
+function showOtpMode() {
+    document.getElementById('authCardLogin').style.display = 'none';
+    document.getElementById('authCardOtp').style.display = '';
+
+    document.getElementById('otpForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const otp = document.getElementById('otpInput').value;
+
+        try {
+            const res = await fetch('/api/mfa-verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp })
+            });
+            const data = await res.json();
+
             if (res.ok) {
                 showDashboard();
             } else {
-                showAuthError(data.error);
+                document.getElementById('otpError').textContent = data.error || 'Invalid OTP';
+                setTimeout(() => { document.getElementById('otpError').textContent = ''; }, 4000);
             }
         } catch {
-            showAuthError('Connection error');
+            document.getElementById('otpError').textContent = 'Connection error';
         }
     };
 }
@@ -597,7 +597,7 @@ async function saveSection(section) {
             body: JSON.stringify(payload)
         });
         if (res.ok) {
-            toast(`${section.charAt(0).toUpperCase() + section.slice(1)} saved!`, 'success');
+            toast(`${section.charAt(0).toUpperCase() + section.slice(1)} saved! (Note: You may need to hard refresh the public page to see changes)`, 'success');
             await loadProfile();
         } else {
             const d = await res.json();
@@ -634,32 +634,8 @@ async function saveTheme() {
 // PASSWORD
 // ==========================================
 async function changePassword() {
-    const current = document.getElementById('currentPass').value;
-    const newPw = document.getElementById('newPass').value;
-    const confirm = document.getElementById('confirmPass').value;
-
-    if (!current || !newPw) return toast('Fill all fields', 'error');
-    if (newPw !== confirm) return toast('New passwords do not match', 'error');
-    if (newPw.length < 6) return toast('Min 6 characters', 'error');
-
-    try {
-        const res = await fetch('/api/admin/password', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ currentPassword: current, newPassword: newPw })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            toast('Password updated!', 'success');
-            document.getElementById('currentPass').value = '';
-            document.getElementById('newPass').value = '';
-            document.getElementById('confirmPass').value = '';
-        } else {
-            toast(data.error || 'Failed', 'error');
-        }
-    } catch {
-        toast('Error updating password', 'error');
-    }
+    // No-op, managed by Gmail
+    toast('Manage your password via Google Account Settings', 'info');
 }
 
 // ==========================================

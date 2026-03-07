@@ -3,77 +3,77 @@
    ========================================== */
 
 (function () {
-    'use strict';
+  'use strict';
 
-    // ---- State ----
-    let profileData = null;
+  // ---- State ----
+  let profileData = null;
 
-    // ---- DOM Ready ----
-    document.addEventListener('DOMContentLoaded', init);
+  // ---- DOM Ready ----
+  document.addEventListener('DOMContentLoaded', init);
 
-    async function init() {
-        try {
-            const res = await fetch('/api/profile');
-            if (!res.ok) throw new Error('Failed to load profile');
-            profileData = await res.json();
-            applyTheme(profileData.theme || 'dark');
-            renderAll();
-            initNavigation();
-            initScrollAnimations();
-            initLightbox();
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-        } catch (err) {
-            console.error('Error loading profile:', err);
-            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;font-size:1.2rem;">Unable to load profile data. Please try again later.</div>';
-        }
+  async function init() {
+    try {
+      const res = await fetch('/api/profile');
+      if (!res.ok) throw new Error('Failed to load profile');
+      profileData = await res.json();
+      applyTheme(profileData.theme || 'dark');
+      renderAll();
+      initNavigation();
+      initScrollAnimations();
+      initLightbox();
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;font-size:1.2rem;">Unable to load profile data. Please try again later.</div>';
     }
+  }
 
-    // ---- Theme ----
-    function applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
+  // ---- Theme ----
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  // ---- Render All Sections ----
+  function renderAll() {
+    renderHero();
+    renderAbout();
+    renderExperience();
+    renderEducation();
+    renderSkills();
+    renderCertifications();
+    renderAwards();
+    renderProjects();
+    renderGallery();
+    renderContact();
+    renderFooter();
+  }
+
+  // ---- Hero ----
+  function renderHero() {
+    const { hero } = profileData;
+    if (!hero) return;
+    document.getElementById('heroName').textContent = hero.name || '';
+    document.getElementById('heroTitle').textContent = hero.title || '';
+    document.getElementById('heroTagline').textContent = hero.tagline || '';
+    if (hero.profileImage) {
+      document.getElementById('profileImage').src = hero.profileImage;
     }
+  }
 
-    // ---- Render All Sections ----
-    function renderAll() {
-        renderHero();
-        renderAbout();
-        renderExperience();
-        renderEducation();
-        renderSkills();
-        renderCertifications();
-        renderAwards();
-        renderProjects();
-        renderGallery();
-        renderContact();
-        renderFooter();
-    }
+  // ---- About ----
+  function renderAbout() {
+    const { about } = profileData;
+    if (!about || !about.paragraphs) return;
+    const container = document.getElementById('aboutContent');
+    container.innerHTML = about.paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  }
 
-    // ---- Hero ----
-    function renderHero() {
-        const { hero } = profileData;
-        if (!hero) return;
-        document.getElementById('heroName').textContent = hero.name || '';
-        document.getElementById('heroTitle').textContent = hero.title || '';
-        document.getElementById('heroTagline').textContent = hero.tagline || '';
-        if (hero.profileImage) {
-            document.getElementById('profileImage').src = hero.profileImage;
-        }
-    }
-
-    // ---- About ----
-    function renderAbout() {
-        const { about } = profileData;
-        if (!about || !about.paragraphs) return;
-        const container = document.getElementById('aboutContent');
-        container.innerHTML = about.paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
-    }
-
-    // ---- Experience ----
-    function renderExperience() {
-        const { experience } = profileData;
-        if (!experience || !experience.length) return;
-        const container = document.getElementById('experienceTimeline');
-        container.innerHTML = experience.map(exp => `
+  // ---- Experience ----
+  function renderExperience() {
+    const { experience } = profileData;
+    if (!experience || !experience.length) return;
+    const container = document.getElementById('experienceTimeline');
+    container.innerHTML = experience.map(exp => `
       <div class="timeline-item reveal">
         <div class="timeline-header">
           <div class="timeline-company">${escapeHtml(exp.company)}</div>
@@ -88,14 +88,14 @@
         ` : ''}
       </div>
     `).join('');
-    }
+  }
 
-    // ---- Education ----
-    function renderEducation() {
-        const { education } = profileData;
-        if (!education) return;
-        const container = document.getElementById('educationCard');
-        container.innerHTML = `
+  // ---- Education ----
+  function renderEducation() {
+    const { education } = profileData;
+    if (!education) return;
+    const container = document.getElementById('educationCard');
+    container.innerHTML = `
       <div class="education-degree">${escapeHtml(education.degree)}</div>
       <div class="education-college">${escapeHtml(education.college)}</div>
       <div class="education-meta">
@@ -103,14 +103,14 @@
         <span>📊 ${escapeHtml(education.aggregate)}</span>
       </div>
     `;
-    }
+  }
 
-    // ---- Skills ----
-    function renderSkills() {
-        const { skills } = profileData;
-        if (!skills) return;
-        const container = document.getElementById('skillsGrid');
-        container.innerHTML = Object.entries(skills).map(([category, items]) => `
+  // ---- Skills ----
+  function renderSkills() {
+    const { skills } = profileData;
+    if (!skills) return;
+    const container = document.getElementById('skillsGrid');
+    container.innerHTML = Object.entries(skills).map(([category, items]) => `
       <div class="skill-category reveal">
         <div class="skill-category-title">${escapeHtml(category)}</div>
         <div class="skill-tags">
@@ -118,14 +118,14 @@
         </div>
       </div>
     `).join('');
-    }
+  }
 
-    // ---- Certifications ----
-    function renderCertifications() {
-        const { certifications } = profileData;
-        if (!certifications || !certifications.length) return;
-        const container = document.getElementById('certificationsGrid');
-        container.innerHTML = certifications.map(cert => `
+  // ---- Certifications ----
+  function renderCertifications() {
+    const { certifications } = profileData;
+    if (!certifications || !certifications.length) return;
+    const container = document.getElementById('certificationsGrid');
+    container.innerHTML = certifications.map(cert => `
       <div class="card reveal">
         ${cert.image ? `<img src="${cert.image}" alt="${escapeHtml(cert.name)}" class="card-image" data-lightbox>` : ''}
         <div class="card-icon">🎓</div>
@@ -134,14 +134,14 @@
         ${cert.link ? `<a href="${cert.link}" target="_blank" rel="noopener" class="card-link">View Certificate →</a>` : ''}
       </div>
     `).join('');
-    }
+  }
 
-    // ---- Awards ----
-    function renderAwards() {
-        const { awards } = profileData;
-        if (!awards || !awards.length) return;
-        const container = document.getElementById('awardsGrid');
-        container.innerHTML = awards.map(award => `
+  // ---- Awards ----
+  function renderAwards() {
+    const { awards } = profileData;
+    if (!awards || !awards.length) return;
+    const container = document.getElementById('awardsGrid');
+    container.innerHTML = awards.map(award => `
       <div class="card reveal">
         ${award.image ? `<img src="${award.image}" alt="${escapeHtml(award.name)}" class="card-image" data-lightbox>` : ''}
         <div class="card-icon">🏆</div>
@@ -149,46 +149,99 @@
         <div class="card-subtitle">${escapeHtml(award.issuer)}</div>
       </div>
     `).join('');
-    }
+  }
 
-    // ---- Projects ----
-    function renderProjects() {
-        const { projects } = profileData;
-        if (!projects || !projects.length) return;
-        const container = document.getElementById('projectsGrid');
-        container.innerHTML = projects.map(proj => `
+  // ---- Projects ----
+  function renderProjects() {
+    const { projects } = profileData;
+    if (!projects || !projects.length) return;
+    const container = document.getElementById('projectsGrid');
+    container.innerHTML = projects.map(proj => `
       <div class="project-card reveal">
         <div class="project-name">${escapeHtml(proj.name)}</div>
         <div class="project-period">${escapeHtml(proj.period)}</div>
         <p class="project-description">${escapeHtml(proj.description)}</p>
       </div>
     `).join('');
+  }
+
+  // ---- Gallery ----
+  function renderGallery() {
+    const { gallery } = profileData;
+    const section = document.getElementById('gallery');
+    if (!gallery || !gallery.length) {
+      section.style.display = 'none';
+      return;
     }
 
-    // ---- Gallery ----
-    function renderGallery() {
-        const { gallery } = profileData;
-        const section = document.getElementById('gallery');
-        if (!gallery || !gallery.length) {
-            section.style.display = 'none';
-            return;
-        }
-        section.style.display = '';
-        const container = document.getElementById('galleryGrid');
-        container.innerHTML = gallery.map(item => `
-      <div class="gallery-item" data-lightbox data-src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" data-caption="${escapeHtml(item.caption || item.originalName || '')}">
-        <img src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" alt="${escapeHtml(item.caption || '')}">
-        ${item.caption ? `<div class="gallery-caption">${escapeHtml(item.caption)}</div>` : ''}
-      </div>
-    `).join('');
+    // Filter out profile images, group by category
+    const grouped = {};
+    gallery.forEach(item => {
+      if (item.category === 'profile') return;
+      const cat = item.category || 'general';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(item);
+    });
+
+    if (Object.keys(grouped).length === 0) {
+      section.style.display = 'none';
+      return;
     }
 
-    // ---- Contact ----
-    function renderContact() {
-        const { contact } = profileData;
-        if (!contact) return;
-        const container = document.getElementById('contactContent');
-        container.innerHTML = `
+    section.style.display = '';
+    const container = document.getElementById('galleryGrid');
+    container.classList.remove('gallery-grid'); // We will use custom category wrapper instead of simple grid
+    container.innerHTML = '';
+
+    for (const [category, items] of Object.entries(grouped)) {
+      const catWrapper = document.createElement('div');
+      catWrapper.className = 'gallery-category-wrapper reveal';
+
+      const catTitle = document.createElement('h3');
+      catTitle.className = 'gallery-category-title';
+      catTitle.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+      catWrapper.appendChild(catTitle);
+
+      const carouselWrapper = document.createElement('div');
+      carouselWrapper.className = 'gallery-carousel-wrapper';
+
+      const scrollBtnLeft = document.createElement('button');
+      scrollBtnLeft.className = 'carousel-btn carousel-btn-left';
+      scrollBtnLeft.innerHTML = '&#10094;';
+
+      const scrollBtnRight = document.createElement('button');
+      scrollBtnRight.className = 'carousel-btn carousel-btn-right';
+      scrollBtnRight.innerHTML = '&#10095;';
+
+      const carouselTrack = document.createElement('div');
+      carouselTrack.className = 'gallery-carousel-track';
+
+      carouselTrack.innerHTML = items.map(item => `
+              <div class="gallery-item-carousel" data-lightbox data-src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" data-caption="${escapeHtml(item.caption || item.originalName || '')}">
+                <img src="${item.filename.startsWith('http') ? item.filename : '/uploads/' + item.filename}" alt="${escapeHtml(item.caption || '')}">
+                ${item.caption ? `<div class="gallery-caption-carousel">${escapeHtml(item.caption)}</div>` : ''}
+              </div>
+            `).join('');
+
+      // Scroll Logic
+      scrollBtnLeft.onclick = () => { carouselTrack.scrollBy({ left: -300, behavior: 'smooth' }); };
+      scrollBtnRight.onclick = () => { carouselTrack.scrollBy({ left: 300, behavior: 'smooth' }); };
+
+      carouselWrapper.appendChild(scrollBtnLeft);
+      carouselWrapper.appendChild(carouselTrack);
+      carouselWrapper.appendChild(scrollBtnRight);
+
+      catWrapper.appendChild(carouselWrapper);
+      container.appendChild(catWrapper);
+    }
+  }
+
+  // ---- Contact ----
+  function renderContact() {
+    const { contact } = profileData;
+    if (!contact) return;
+    const container = document.getElementById('contactContent');
+    container.innerHTML = `
       <div class="contact-info">
         <div class="contact-item">
           <span class="contact-icon">📧</span>
@@ -224,121 +277,121 @@
         </a>
       </div>
     `;
-    }
+  }
 
-    // ---- Footer ----
-    function renderFooter() {
-        const { hero } = profileData;
-        if (hero && hero.quote) {
-            document.getElementById('footerQuote').textContent = `"${hero.quote}"`;
+  // ---- Footer ----
+  function renderFooter() {
+    const { hero } = profileData;
+    if (hero && hero.quote) {
+      document.getElementById('footerQuote').textContent = `"${hero.quote}"`;
+    }
+  }
+
+  // ---- Navigation ----
+  function initNavigation() {
+    const navbar = document.getElementById('navbar');
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    const links = navLinks.querySelectorAll('.nav-link');
+
+    // Hamburger toggle
+    navToggle.addEventListener('click', () => {
+      navToggle.classList.toggle('active');
+      navLinks.classList.toggle('active');
+    });
+
+    // Close on link click
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.classList.remove('active');
+        navLinks.classList.remove('active');
+      });
+    });
+
+    // Scroll events
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY;
+      navbar.classList.toggle('scrolled', currentScroll > 50);
+      lastScroll = currentScroll;
+      updateActiveNav();
+    });
+
+    // Active nav link highlighting
+    function updateActiveNav() {
+      const sections = document.querySelectorAll('.section');
+      const scrollPos = window.scrollY + 100;
+
+      sections.forEach(section => {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        const id = section.getAttribute('id');
+
+        if (scrollPos >= top && scrollPos < top + height) {
+          links.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+          });
         }
+      });
     }
+  }
 
-    // ---- Navigation ----
-    function initNavigation() {
-        const navbar = document.getElementById('navbar');
-        const navToggle = document.getElementById('navToggle');
-        const navLinks = document.getElementById('navLinks');
-        const links = navLinks.querySelectorAll('.nav-link');
-
-        // Hamburger toggle
-        navToggle.addEventListener('click', () => {
-            navToggle.classList.toggle('active');
-            navLinks.classList.toggle('active');
+  // ---- Scroll Animations ----
+  function initScrollAnimations() {
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
         });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
 
-        // Close on link click
-        links.forEach(link => {
-            link.addEventListener('click', () => {
-                navToggle.classList.remove('active');
-                navLinks.classList.remove('active');
-            });
-        });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  }
 
-        // Scroll events
-        let lastScroll = 0;
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.scrollY;
-            navbar.classList.toggle('scrolled', currentScroll > 50);
-            lastScroll = currentScroll;
-            updateActiveNav();
-        });
+  // ---- Lightbox ----
+  function initLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxClose = document.getElementById('lightboxClose');
 
-        // Active nav link highlighting
-        function updateActiveNav() {
-            const sections = document.querySelectorAll('.section');
-            const scrollPos = window.scrollY + 100;
-
-            sections.forEach(section => {
-                const top = section.offsetTop;
-                const height = section.offsetHeight;
-                const id = section.getAttribute('id');
-
-                if (scrollPos >= top && scrollPos < top + height) {
-                    links.forEach(link => {
-                        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
-                    });
-                }
-            });
+    document.addEventListener('click', e => {
+      const target = e.target.closest('[data-lightbox]');
+      if (target) {
+        const src = target.getAttribute('data-src') || target.src || target.querySelector('img')?.src;
+        const caption = target.getAttribute('data-caption') || target.alt || '';
+        if (src) {
+          lightboxImage.src = src;
+          lightboxCaption.textContent = caption;
+          lightbox.classList.add('active');
+          document.body.style.overflow = 'hidden';
         }
+      }
+    });
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
     }
 
-    // ---- Scroll Animations ----
-    function initScrollAnimations() {
-        const observer = new IntersectionObserver(
-            entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
-                });
-            },
-            { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-        );
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  }
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    }
-
-    // ---- Lightbox ----
-    function initLightbox() {
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImage = document.getElementById('lightboxImage');
-        const lightboxCaption = document.getElementById('lightboxCaption');
-        const lightboxClose = document.getElementById('lightboxClose');
-
-        document.addEventListener('click', e => {
-            const target = e.target.closest('[data-lightbox]');
-            if (target) {
-                const src = target.getAttribute('data-src') || target.src || target.querySelector('img')?.src;
-                const caption = target.getAttribute('data-caption') || target.alt || '';
-                if (src) {
-                    lightboxImage.src = src;
-                    lightboxCaption.textContent = caption;
-                    lightbox.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
-            }
-        });
-
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', e => {
-            if (e.target === lightbox) closeLightbox();
-        });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeLightbox();
-        });
-    }
-
-    // ---- Utilities ----
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+  // ---- Utilities ----
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
 })();

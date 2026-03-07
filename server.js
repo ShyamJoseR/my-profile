@@ -8,6 +8,7 @@ const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const nodemailer = require('nodemailer');
 
 const connectDB = require('./db');
 const Profile = require('./models/Profile');
@@ -21,9 +22,9 @@ connectDB();
 // Cloudinary config
 // Needs CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in .env
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // --- Data paths (Keep for local downloads/migrations) ---
@@ -57,11 +58,11 @@ app.use('/downloads', express.static(path.join(__dirname, 'public', 'downloads')
 // Note: If CLOUDINARY keys are missing, multer might fail on upload.
 // For a production app this is fine, but make sure to set them!
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'portfolio',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
-  }
+    cloudinary: cloudinary,
+    params: {
+        folder: 'portfolio',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+    }
 });
 const upload = multer({
     storage,
@@ -89,14 +90,14 @@ async function readProfile() {
             }
             await profile.save();
         }
-        
+
         // Return clean POJO
         const obj = profile.toObject();
         delete obj._id;
         delete obj.__v;
         delete obj.singletonId;
         return obj;
-    } catch(err) {
+    } catch (err) {
         console.error('Error reading profile:', err);
         return null;
     }
@@ -109,7 +110,7 @@ async function writeProfile(data) {
             { $set: data },
             { upsert: true, new: true, strict: false }
         );
-    } catch(err) {
+    } catch (err) {
         console.error('Error writing profile:', err);
     }
 }
@@ -136,6 +137,12 @@ function updateEnvPasswordHash(newHash) {
 
 // PUBLIC ROUTES
 app.get('/api/profile', async (req, res) => {
+    // Add cache-control to prevent browser from perpetually serving stale data
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+
     const profile = await readProfile();
     if (!profile) {
         return res.status(404).json({ error: 'Profile data not found' });
@@ -144,39 +151,76 @@ app.get('/api/profile', async (req, res) => {
 });
 
 // AUTH ROUTES
-app.post('/api/setup', async (req, res) => {
-    const currentHash = process.env.ADMIN_PASSWORD_HASH;
-    if (currentHash && !currentHash.includes('placeholder')) {
-        return res.status(403).json({ error: 'Setup already completed. Use admin panel to change password.' });
+app.post('/api/login', async (req, res) => {
+    const { email, gmailAppPassword } = req.body;
+
+    if (!email || !gmailAppPassword) {
+        return res.status(400).json({ error: 'Both Email and Gmail App Password are required' });
     }
-    const { password } = req.body;
-    if (!password || password.length < 6) {
-        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+    if (email.toLowerCase() !== 'shyamjose.r@gmail.com') {
+        return res.status(403).json({ error: 'Unauthorized email address.' });
     }
-    const hash = await bcrypt.hash(password, 12);
-    updateEnvPasswordHash(hash);
-    req.session.authenticated = true;
-    res.json({ success: true, message: 'Password set successfully. You are now logged in.' });
+
+    try {
+        // Test Gmail credentials immediately
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: email,
+                pass: gmailAppPassword
+            }
+        });
+
+        await transporter.verify();
+
+        // Credentials are good. Generate OTP.
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Send OTP
+        await transporter.sendMail({
+            from: email,
+            to: email, // Send to self
+            subject: 'Admin Login OTP',
+            text: `Your one-time password for the Admin Panel is: ${otp}\n\nDo not share this code.`,
+            html: `<p>Your one-time password for the Admin Panel is: <strong>${otp}</strong></p><p>Do not share this code.</p>`
+        });
+
+        // Store active OTP state in session temporarily
+        req.session.pendingMfa = true;
+        req.session.mfaEmail = email;
+        req.session.otp = otp;
+        req.session.otpExpiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
+
+        return res.json({ success: true, mfaRequired: true, message: 'OTP sent to email.' });
+
+    } catch (err) {
+        console.error('MFA Auth Error:', err);
+        return res.status(401).json({ error: 'Invalid Gmail credentials or App Password not configured properly.' });
+    }
 });
 
-app.post('/api/login', async (req, res) => {
-    const { password } = req.body;
-    if (!password) {
-        return res.status(400).json({ error: 'Password is required' });
+app.post('/api/mfa-verify', async (req, res) => {
+    const { otp } = req.body;
+
+    if (!req.session.pendingMfa || !req.session.otp) {
+        return res.status(400).json({ error: 'Session expired or invalid. Please start over.' });
     }
-    const hash = process.env.ADMIN_PASSWORD_HASH;
-    if (!hash || hash.includes('placeholder')) {
-        return res.status(403).json({ error: 'Admin password not set. Please visit /admin.html to set up.' });
+
+    if (Date.now() > req.session.otpExpiresAt) {
+        req.session.pendingMfa = false;
+        req.session.otp = null;
+        return res.status(400).json({ error: 'OTP has expired.' });
     }
-    try {
-        const match = await bcrypt.compare(password, hash);
-        if (match) {
-            req.session.authenticated = true;
-            return res.json({ success: true });
-        }
-        return res.status(401).json({ error: 'Invalid password' });
-    } catch {
-        return res.status(500).json({ error: 'Authentication error' });
+
+    if (otp === req.session.otp) {
+        // Success
+        req.session.authenticated = true;
+        req.session.pendingMfa = false;
+        req.session.otp = null;
+        return res.json({ success: true });
+    } else {
+        return res.status(401).json({ error: 'Invalid OTP.' });
     }
 });
 
@@ -187,11 +231,10 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/auth-check', (req, res) => {
-    const hash = process.env.ADMIN_PASSWORD_HASH;
-    const needsSetup = !hash || hash.includes('placeholder');
+    // With dynamic Gmail setup, "needsSetup" is always false.
     res.json({
         authenticated: !!(req.session && req.session.authenticated),
-        needsSetup
+        needsSetup: false
     });
 });
 
@@ -199,7 +242,7 @@ app.get('/api/auth-check', (req, res) => {
 app.put('/api/admin/profile', requireAuth, async (req, res) => {
     const profile = await readProfile();
     if (!profile) return res.status(404).json({ error: 'Profile data not found' });
-    
+
     const updates = req.body;
     Object.assign(profile, updates);
     await writeProfile(profile);
@@ -209,7 +252,7 @@ app.put('/api/admin/profile', requireAuth, async (req, res) => {
 app.put('/api/admin/profile/:section', requireAuth, async (req, res) => {
     const profile = await readProfile();
     if (!profile) return res.status(404).json({ error: 'Profile data not found' });
-    
+
     const { section } = req.params;
     profile[section] = req.body;
     await writeProfile(profile);
@@ -218,13 +261,13 @@ app.put('/api/admin/profile/:section', requireAuth, async (req, res) => {
 
 app.post('/api/admin/upload', requireAuth, upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    
+
     const { category, caption } = req.body;
     // Cloudinary returns the full URL in req.file.path
     const imageEntry = {
         id: uuidv4(),
         category: category || 'general',
-        filename: req.file.path, 
+        filename: req.file.path,
         cloudinaryId: req.file.filename, // Keep public_id to delete later
         originalName: req.file.originalname,
         caption: caption || '',
@@ -237,7 +280,7 @@ app.post('/api/admin/upload', requireAuth, upload.single('image'), async (req, r
         profile.gallery.push(imageEntry);
         await writeProfile(profile);
     }
-    
+
     res.json({ success: true, image: imageEntry });
 });
 
@@ -250,12 +293,12 @@ app.delete('/api/admin/upload/:id', requireAuth, async (req, res) => {
     if (imageIndex === -1) return res.status(404).json({ error: 'Image not found' });
 
     const image = profile.gallery[imageIndex];
-    
+
     // Delete from Cloudinary if it has a cloudinaryId
     if (image.cloudinaryId) {
         try {
             await cloudinary.uploader.destroy(image.cloudinaryId);
-        } catch(err) {
+        } catch (err) {
             console.error('Failed to delete image from Cloudinary:', err);
         }
     } else {
@@ -264,7 +307,7 @@ app.delete('/api/admin/upload/:id', requireAuth, async (req, res) => {
         if (fs.existsSync(filePath)) {
             try {
                 fs.unlinkSync(filePath);
-            } catch(e) { }
+            } catch (e) { }
         }
     }
 
@@ -280,33 +323,20 @@ app.put('/api/admin/theme', requireAuth, async (req, res) => {
     }
     const profile = await readProfile();
     if (!profile) return res.status(404).json({ error: 'Profile not found' });
-    
+
     profile.theme = theme;
     await writeProfile(profile);
     res.json({ success: true, theme });
 });
 
+// Password change is handled by Google directly for their App Password, not here
 app.put('/api/admin/password', requireAuth, async (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Both current and new passwords required' });
-    if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
-    
-    const hash = process.env.ADMIN_PASSWORD_HASH;
-    const match = await bcrypt.compare(currentPassword, hash);
-    if (!match) return res.status(401).json({ error: 'Current password is incorrect' });
-    
-    const newHash = await bcrypt.hash(newPassword, 12);
-    updateEnvPasswordHash(newHash);
-    res.json({ success: true, message: 'Password updated successfully' });
+    res.status(403).json({ error: 'Please manage your Gmail App Password directly via your Google Account Settings.' });
 });
 
 app.listen(PORT, () => {
     console.log(`\n🚀 Portfolio server running at http://localhost:${PORT}`);
     console.log(`📄 Public page:  http://localhost:${PORT}`);
     console.log(`🔧 Admin panel:  http://localhost:${PORT}/admin.html\n`);
-
-    const hash = process.env.ADMIN_PASSWORD_HASH;
-    if (!hash || hash.includes('placeholder')) {
-        console.log('⚠️  Admin password not set yet. Visit the admin panel to set up.\n');
-    }
+    console.log(`✉️  MFA Active: Ensure you use your Gmail App Password to log in.\n`);
 });

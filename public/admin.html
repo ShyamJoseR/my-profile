@@ -16,43 +16,43 @@
 
 <body>
     <!-- Setup / Login Screen -->
-        <div class="auth-card" id="authCardLogin">
-            <div class="auth-logo">
-                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
-            </div>
-            <h1 class="auth-title" id="authTitle">Admin Login</h1>
-            <p class="auth-subtitle" id="authSubtitle">Enter your Gmail credentials</p>
-            <form class="auth-form" id="authForm">
-                <div class="form-group" id="loginEmailGroup">
-                    <label for="loginEmail">Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="shyamjose.r@gmail.com" required>
-                </div>
-                <div class="form-group" id="loginPasswordGroup">
-                    <label for="loginPassword">Gmail App Password</label>
-                    <input type="password" id="loginPassword" placeholder="16-character app password" required>
-                    <small style="color: #94a3b8; margin-top: 5px; display: block;">We do not save your password. This is used instantly to send you an OTP.</small>
-                </div>
-                <div class="auth-error" id="authError"></div>
-                <button type="submit" class="btn btn-primary btn-full" id="authBtn">Send OTP</button>
-            </form>
+    <div class="auth-card" id="authCardLogin">
+        <div class="auth-logo">
+            <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
         </div>
+        <h1 class="auth-title" id="authTitle">Admin Login</h1>
+        <p class="auth-subtitle" id="authSubtitle">Enter your credentials</p>
+        <form class="auth-form" id="authForm">
+            <div class="form-group" id="loginEmailGroup">
+                <label for="loginEmail">Username</label>
+                <input type="text" id="loginEmail" placeholder="Enter admin username" required>
+            </div>
+            <div class="form-group" id="loginPasswordGroup">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" required>
+            </div>
+            <div class="auth-error" id="authError"></div>
+            <button type="submit" class="btn btn-primary btn-full" id="authBtn">Secure Login</button>
+        </form>
+    </div>
 
-        <div class="auth-card" id="authCardOtp" style="display:none">
-            <div class="auth-logo">
-                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
-            </div>
-            <h1 class="auth-title">Verify OTP</h1>
-            <p class="auth-subtitle">Check your email for the 6-digit code</p>
-            <form class="auth-form" id="otpForm">
-                <div class="form-group">
-                    <label for="otpInput">One-Time Password</label>
-                    <input type="text" id="otpInput" placeholder="123456" pattern="\d{6}" maxlength="6" required>
-                </div>
-                <div class="auth-error" id="otpError"></div>
-                <button type="submit" class="btn btn-primary btn-full">Verify & Login</button>
-                <button type="button" class="btn btn-outline btn-full" style="margin-top: 10px;" onclick="location.reload()">Cancel</button>
-            </form>
+    <div class="auth-card" id="authCardOtp" style="display:none">
+        <div class="auth-logo">
+            <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
         </div>
+        <h1 class="auth-title">Verify OTP</h1>
+        <p class="auth-subtitle">Check your email for the 6-digit code</p>
+        <form class="auth-form" id="otpForm">
+            <div class="form-group">
+                <label for="otpInput">One-Time Password</label>
+                <input type="text" id="otpInput" placeholder="123456" pattern="\d{6}" maxlength="6" required>
+            </div>
+            <div class="auth-error" id="otpError"></div>
+            <button type="submit" class="btn btn-primary btn-full">Verify & Login</button>
+            <button type="button" class="btn btn-outline btn-full" style="margin-top: 10px;"
+                onclick="location.reload()">Cancel</button>
+        </form>
+    </div>
     </div>
 
     <!-- Admin Dashboard -->
@@ -284,9 +284,12 @@
                     <h2 class="panel-title">Security Settings</h2>
                     <div class="form-card">
                         <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                            Password management is now handled directly via your Google Account's App Passwords settings. We do not store any passwords in the database or environment variables for maximum security.
+                            Password management is now handled directly via your Google Account's App Passwords
+                            settings. We do not store any passwords in the database or environment variables for maximum
+                            security.
                         </p>
-                        <a href="https://myaccount.google.com/apppasswords" target="_blank" class="btn btn-outline">Manage Google App Passwords ↗</a>
+                        <a href="https://myaccount.google.com/apppasswords" target="_blank"
+                            class="btn btn-outline">Manage Google App Passwords ↗</a>
                     </div>
                 </div>
 

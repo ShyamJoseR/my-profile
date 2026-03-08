@@ -152,19 +152,9 @@
   ],
   "projects": [
     {
-      "name": "VisionNext – Card Clearing & Settlement",
-      "period": "2024 – Present",
-      "description": "Architected microservices for real-time clearing using Kafka event streaming and Spring Boot."
-    },
-    {
-      "name": "VisionNext – Event Management Platform",
-      "period": "2023 – 2024",
-      "description": "Developed event-driven services that support credit card lifecycle activities using cloud-native patterns."
-    },
-    {
-      "name": "FirstVision – Compliance Releases",
-      "period": "2020 – 2022",
-      "description": "Implemented secure and compliant upgrades in a mission-critical credit card platform."
+      "name": "Test Project 1",
+      "period": "2026",
+      "description": "desc"
     }
   ],
   "contact": {
@@ -190,6 +180,15 @@
       "originalName": "Profile_Pic.jpg",
       "caption": "Profile Picture",
       "uploadedAt": "2026-03-06T18:31:51.350Z"
+    },
+    {
+      "id": "ef455d56-7dfa-4dac-b480-acf27d5499ff",
+      "category": "certificate",
+      "filename": "https://res.cloudinary.com/dzlsylsdu/image/upload/v1772856323/portfolio/vhdptfvz3qmooiegclk1.png",
+      "cloudinaryId": "portfolio/vhdptfvz3qmooiegclk1",
+      "originalName": "AWSome Day Online Conference.png",
+      "caption": "",
+      "uploadedAt": "2026-03-07T04:05:23.921Z"
     }
   ]
 }

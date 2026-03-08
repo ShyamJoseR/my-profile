@@ -9,6 +9,8 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 
 const connectDB = require('./db');
 const Profile = require('./models/Profile');
@@ -73,21 +75,38 @@ const upload = multer({
 async function readProfile() {
     try {
         let profile = await Profile.findOne({ singletonId: 'main-profile' });
-        if (!profile) {
-            // Seed from file if exists (Migration)
-            if (fs.existsSync(PROFILE_PATH)) {
+        
+        // Sync with profile.json if it's newer than the DB
+        if (fs.existsSync(PROFILE_PATH)) {
+            const fileStats = fs.statSync(PROFILE_PATH);
+            const fileModifiedTime = fileStats.mtime;
+            
+            if (!profile || fileModifiedTime > profile.updatedAt) {
+                console.log('🔄 Syncing profile.json to Database...');
                 try {
                     const localData = JSON.parse(fs.readFileSync(PROFILE_PATH, 'utf-8'));
-                    profile = new Profile({
-                        singletonId: 'main-profile',
-                        ...localData
-                    });
+                    if (profile) {
+                        // Update existing
+                        Object.assign(profile, localData);
+                        // Force updatedAt to be at least as new as the file to prevent loops
+                        profile.updatedAt = new Date(); 
+                        await profile.save();
+                    } else {
+                        // Create new
+                        profile = new Profile({
+                            singletonId: 'main-profile',
+                            ...localData
+                        });
+                        await profile.save();
+                    }
                 } catch (e) {
-                    profile = new Profile({ singletonId: 'main-profile' });
+                    console.error('Error syncing profile.json:', e);
                 }
-            } else {
-                profile = new Profile({ singletonId: 'main-profile' });
             }
+        }
+
+        if (!profile) {
+            profile = new Profile({ singletonId: 'main-profile' });
             await profile.save();
         }
 
@@ -105,11 +124,23 @@ async function readProfile() {
 
 async function writeProfile(data) {
     try {
-        await Profile.findOneAndUpdate(
+        // Update Database
+        const updated = await Profile.findOneAndUpdate(
             { singletonId: 'main-profile' },
             { $set: data },
             { upsert: true, new: true, strict: false }
         );
+
+        // Update profile.json to keep it in sync
+        const cleanData = updated.toObject();
+        delete cleanData._id;
+        delete cleanData.__v;
+        delete cleanData.singletonId;
+        delete cleanData.updatedAt;
+        delete cleanData.createdAt;
+
+        fs.writeFileSync(PROFILE_PATH, JSON.stringify(cleanData, null, 2), 'utf-8');
+        console.log('💾 Profile synced to both DB and profile.json');
     } catch (err) {
         console.error('Error writing profile:', err);
     }
@@ -152,75 +183,127 @@ app.get('/api/profile', async (req, res) => {
 
 // AUTH ROUTES
 app.post('/api/login', async (req, res) => {
-    const { email, gmailAppPassword } = req.body;
+    console.log('[LOGIN ATTEMPT] Received request.');
+    const { email, password } = req.body;
 
-    if (!email || !gmailAppPassword) {
-        return res.status(400).json({ error: 'Both Email and Gmail App Password are required' });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (email.toLowerCase() !== 'shyamjose.r@gmail.com') {
+    const adminEmail = process.env.GMAIL_USER || 'shyamjose.r@gmail.com';
+    if (email.trim().toLowerCase() !== adminEmail.toLowerCase()) {
+        console.log('[LOGIN ATTEMPT] Unauthorized email:', email);
         return res.status(403).json({ error: 'Unauthorized email address.' });
     }
 
+    // Verify Password
+    const passwordHash = process.env.ADMIN_PASSWORD_HASH;
+    if (!passwordHash) {
+        console.error('[LOGIN ATTEMPT] ADMIN_PASSWORD_HASH not set in .env');
+        return res.status(500).json({ error: 'Server configuration error.' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, passwordHash);
+    if (!passwordMatch) {
+        console.log('[LOGIN ATTEMPT] Invalid password for:', email);
+        return res.status(401).json({ error: 'Invalid password.' });
+    }
+
+    // --- Check for TOTP Secret ---
+    const totpSecret = process.env.TOTP_SECRET;
+
+    if (!totpSecret) {
+        // No TOTP secret set up yet. 
+        return res.json({ success: true, mfaRequired: true, needsSetup: true, message: 'TOTP MFA Setup required.' });
+    }
+
+    // If TOTP secret exists, we require code.
+    req.session.pendingMfa = true;
+    req.session.mfaEmail = email;
+    return res.json({ success: true, mfaRequired: true, needsSetup: false, message: 'TOTP Code Required.' });
+});
+
+// TOTP SETUP ROUTE
+app.get('/api/admin/mfa-setup', async (req, res) => {
+    // Only allow setup if not already set up OR if authenticated
+    const isSetup = !!process.env.TOTP_SECRET;
+    if (isSetup && (!req.session || !req.session.authenticated)) {
+        return res.status(403).json({ error: 'MFA already configured. Log in to re-configure.' });
+    }
+
+    const email = process.env.GMAIL_USER || 'shyamjose.r@gmail.com';
+    const secret = speakeasy.generateSecret({
+        length: 20,
+        name: `Shyam Portfolio Admin (${email})`,
+        issuer: 'Shyam Portfolio'
+    });
+    
     try {
-        // Test Gmail credentials immediately
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: email,
-                pass: gmailAppPassword
-            }
-        });
-
-        await transporter.verify();
-
-        // Credentials are good. Generate OTP.
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Send OTP
-        await transporter.sendMail({
-            from: email,
-            to: email, // Send to self
-            subject: 'Admin Login OTP',
-            text: `Your one-time password for the Admin Panel is: ${otp}\n\nDo not share this code.`,
-            html: `<p>Your one-time password for the Admin Panel is: <strong>${otp}</strong></p><p>Do not share this code.</p>`
-        });
-
-        // Store active OTP state in session temporarily
-        req.session.pendingMfa = true;
-        req.session.mfaEmail = email;
-        req.session.otp = otp;
-        req.session.otpExpiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
-
-        return res.json({ success: true, mfaRequired: true, message: 'OTP sent to email.' });
-
+        const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+        // Store secret in session temporarily until confirmed
+        req.session.tempTotpSecret = secret.base32;
+        res.json({ qrCodeUrl, secret: secret.base32 });
     } catch (err) {
-        console.error('MFA Auth Error:', err);
-        return res.status(401).json({ error: 'Invalid Gmail credentials or App Password not configured properly.' });
+        res.status(500).json({ error: 'Failed to generate QR Code' });
+    }
+});
+
+// TOTP CONFIRM ROUTE (Initial setup)
+app.post('/api/admin/mfa-confirm', async (req, res) => {
+    const { token } = req.body;
+    const secret = req.session.tempTotpSecret;
+
+    if (!secret) return res.status(400).json({ error: 'No setup in progress' });
+
+    const isValid = speakeasy.totp.verify({
+        secret: secret,
+        encoding: 'base32',
+        token: token,
+        window: 1
+    });
+
+    if (isValid) {
+        // Save to .env
+        const envPath = path.join(__dirname, '.env');
+        let envContent = fs.readFileSync(envPath, 'utf-8');
+        if (envContent.includes('TOTP_SECRET=')) {
+            envContent = envContent.replace(/TOTP_SECRET=.*/, `TOTP_SECRET=${secret}`);
+        } else {
+            envContent += `\nTOTP_SECRET=${secret}`;
+        }
+        fs.writeFileSync(envPath, envContent, 'utf-8');
+        process.env.TOTP_SECRET = secret;
+        
+        req.session.authenticated = true;
+        req.session.tempTotpSecret = null;
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ error: 'Invalid token' });
     }
 });
 
 app.post('/api/mfa-verify', async (req, res) => {
-    const { otp } = req.body;
+    const { token } = req.body;
+    const totpSecret = process.env.TOTP_SECRET;
 
-    if (!req.session.pendingMfa || !req.session.otp) {
-        return res.status(400).json({ error: 'Session expired or invalid. Please start over.' });
+    if (!req.session.pendingMfa || !totpSecret) {
+        return res.status(400).json({ error: 'Session expired or MFA not configured. Please start over.' });
     }
 
-    if (Date.now() > req.session.otpExpiresAt) {
-        req.session.pendingMfa = false;
-        req.session.otp = null;
-        return res.status(400).json({ error: 'OTP has expired.' });
-    }
-
-    if (otp === req.session.otp) {
+    const isValid = speakeasy.totp.verify({
+        secret: totpSecret,
+        encoding: 'base32',
+        token: token,
+        window: 1
+    });
+    
+    if (isValid) {
         // Success
         req.session.authenticated = true;
         req.session.pendingMfa = false;
-        req.session.otp = null;
         return res.json({ success: true });
     } else {
-        return res.status(401).json({ error: 'Invalid OTP.' });
+        return res.status(401).json({ error: 'Invalid Authenticator code.' });
     }
 });
 
@@ -231,10 +314,9 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/auth-check', (req, res) => {
-    // With dynamic Gmail setup, "needsSetup" is always false.
     res.json({
         authenticated: !!(req.session && req.session.authenticated),
-        needsSetup: false
+        needsSetup: !process.env.TOTP_SECRET
     });
 });
 
@@ -338,5 +420,5 @@ app.listen(PORT, () => {
     console.log(`\n🚀 Portfolio server running at http://localhost:${PORT}`);
     console.log(`📄 Public page:  http://localhost:${PORT}`);
     console.log(`🔧 Admin panel:  http://localhost:${PORT}/admin.html\n`);
-    console.log(`✉️  MFA Active: Ensure you use your Gmail App Password to log in.\n`);
+    console.log(`🔒 Security: Secure Password + TOTP MFA is active.\n`);
 });

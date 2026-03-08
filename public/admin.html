@@ -15,44 +15,71 @@
 </head>
 
 <body>
-    <!-- Setup / Login Screen -->
-    <div class="auth-card" id="authCardLogin">
-        <div class="auth-logo">
-            <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
+    <!-- Authentication Screens Container -->
+    <div id="authScreen">
+        <!-- Login Screen -->
+        <div class="auth-card" id="authCardLogin">
+            <div class="auth-logo">
+                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
+            </div>
+            <h1 class="auth-title" id="authTitle">Admin Portal</h1>
+            <p class="auth-subtitle" id="authSubtitle">Secure access for administrator only</p>
+            
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="admin@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <div class="auth-error" id="authError"></div>
+                <button type="submit" class="btn btn-primary btn-full">Next: Verify Code</button>
+            </form>
         </div>
-        <h1 class="auth-title" id="authTitle">Admin Login</h1>
-        <p class="auth-subtitle" id="authSubtitle">Enter your credentials</p>
-        <form class="auth-form" id="authForm">
-            <div class="form-group" id="loginEmailGroup">
-                <label for="loginEmail">Username</label>
-                <input type="text" id="loginEmail" placeholder="Enter admin username" required>
-            </div>
-            <div class="form-group" id="loginPasswordGroup">
-                <label for="loginPassword">Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password" required>
-            </div>
-            <div class="auth-error" id="authError"></div>
-            <button type="submit" class="btn btn-primary btn-full" id="authBtn">Secure Login</button>
-        </form>
-    </div>
 
-    <div class="auth-card" id="authCardOtp" style="display:none">
-        <div class="auth-logo">
-            <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
-        </div>
-        <h1 class="auth-title">Verify OTP</h1>
-        <p class="auth-subtitle">Check your email for the 6-digit code</p>
-        <form class="auth-form" id="otpForm">
-            <div class="form-group">
-                <label for="otpInput">One-Time Password</label>
-                <input type="text" id="otpInput" placeholder="123456" pattern="\d{6}" maxlength="6" required>
+        <!-- MFA Setup Screen (QR Code) -->
+        <div class="auth-card" id="authCardSetup" style="display:none">
+            <div class="auth-logo">
+                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
             </div>
-            <div class="auth-error" id="otpError"></div>
-            <button type="submit" class="btn btn-primary btn-full">Verify & Login</button>
-            <button type="button" class="btn btn-outline btn-full" style="margin-top: 10px;"
-                onclick="location.reload()">Cancel</button>
-        </form>
-    </div>
+            <h1 class="auth-title">Setup Authenticator</h1>
+            <p class="auth-subtitle">Scan this QR code with Google Authenticator or any TOTP app</p>
+            
+            <div class="mfa-setup-content" style="text-align: center; margin: 20px 0;">
+                <img id="qrCodeImg" style="max-width: 200px; background: white; padding: 10px; border-radius: 8px;">
+                <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">Secret Key: <code id="secretText"></code></p>
+            </div>
+
+            <form class="auth-form" id="setupForm">
+                <div class="form-group">
+                    <label for="setupToken">Verify first 6-digit code</label>
+                    <input type="text" id="setupToken" placeholder="123456" pattern="\d{6}" maxlength="6" required>
+                </div>
+                <div class="auth-error" id="setupError"></div>
+                <button type="submit" class="btn btn-primary btn-full">Confirm & Secure Account</button>
+            </form>
+        </div>
+
+        <!-- OTP Verification Screen -->
+        <div class="auth-card" id="authCardOtp" style="display:none">
+            <div class="auth-logo">
+                <span class="logo-bracket">&lt;</span>SJR<span class="logo-bracket">/&gt;</span>
+            </div>
+            <h1 class="auth-title">Verify Code</h1>
+            <p class="auth-subtitle">Enter the 6-digit code from your Authenticator app</p>
+            <form class="auth-form" id="otpForm">
+                <div class="form-group">
+                    <label for="otpInput">Authenticator Code</label>
+                    <input type="text" id="otpInput" placeholder="123456" pattern="\d{6}" maxlength="6" required>
+                </div>
+                <div class="auth-error" id="otpError"></div>
+                <button type="submit" class="btn btn-primary btn-full">Verify & Login</button>
+                <button type="button" class="btn btn-outline btn-full" style="margin-top: 10px;"
+                    onclick="location.reload()">Cancel</button>
+            </form>
+        </div>
     </div>
 
     <!-- Admin Dashboard -->
@@ -283,13 +310,19 @@
                 <div class="tab-panel" id="tab-security">
                     <h2 class="panel-title">Security Settings</h2>
                     <div class="form-card">
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                            Password management is now handled directly via your Google Account's App Passwords
-                            settings. We do not store any passwords in the database or environment variables for maximum
-                            security.
-                        </p>
-                        <a href="https://myaccount.google.com/apppasswords" target="_blank"
-                            class="btn btn-outline">Manage Google App Passwords ↗</a>
+                        <div class="security-info">
+                            <h3>Two-Factor Authentication (TOTP)</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                                Your account is secured using Time-based One-Time Passwords (TOTP). 
+                                This is more secure than email OTP and works with apps like Google Authenticator, Authy, or Microsoft Authenticator.
+                            </p>
+                            <div class="security-actions">
+                                <button class="btn btn-warning" onclick="reconfigureMFA()">Reset & Reconfigure MFA</button>
+                                <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">
+                                    Warning: Resetting will require you to scan a new QR code immediately.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -327,7 +360,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <script src="/js/admin.js"></script>
+    <script src="js/admin.js?v=2"></script>
 </body>
 
 </html>

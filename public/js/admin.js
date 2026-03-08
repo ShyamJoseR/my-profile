@@ -11,10 +11,10 @@ async function init() {
     const authRes = await fetch('/api/auth-check');
     const auth = await authRes.json();
 
-    if (auth.needsSetup) {
-        showSetupMode();
-    } else if (auth.authenticated) {
+    if (auth.authenticated) {
         showDashboard();
+    } else if (auth.needsSetup) {
+        showMfaSetup();
     } else {
         showLoginMode();
     }
@@ -35,37 +35,89 @@ function showLoginMode() {
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('authCardLogin').style.display = '';
     document.getElementById('authCardOtp').style.display = 'none';
+    document.getElementById('authCardSetup').style.display = 'none';
 
-    document.getElementById('authForm').onsubmit = async (e) => {
+    const loginForm = document.getElementById('loginForm');
+    loginForm.onsubmit = async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
-        const pw = document.getElementById('loginPassword').value;
-
-        const btn = document.getElementById('authBtn');
+        const password = document.getElementById('loginPassword').value;
+        const btn = loginForm.querySelector('button');
         const origText = btn.textContent;
-        btn.textContent = 'Sending...';
+        
+        btn.textContent = 'Verifying...';
         btn.disabled = true;
 
         try {
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, gmailAppPassword: pw })
+                body: JSON.stringify({ email, password })
             });
             const data = await res.json();
-
+            
             btn.textContent = origText;
             btn.disabled = false;
 
-            if (res.ok && data.mfaRequired) {
-                showOtpMode();
+            if (res.ok) {
+                if (data.needsSetup) {
+                    showMfaSetup();
+                } else if (data.mfaRequired) {
+                    showOtpMode();
+                } else if (data.success) {
+                    showDashboard();
+                }
             } else {
-                showAuthError(data.error || 'Authentication error');
+                showAuthError(data.error || 'Authentication failed.');
             }
         } catch {
             btn.textContent = origText;
             btn.disabled = false;
             showAuthError('Connection error');
+        }
+    };
+}
+
+async function showMfaSetup() {
+    document.getElementById('authCardLogin').style.display = 'none';
+    document.getElementById('authCardOtp').style.display = 'none';
+    document.getElementById('authCardSetup').style.display = '';
+
+    try {
+        const res = await fetch('/api/admin/mfa-setup');
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById('qrCodeImg').src = data.qrCodeUrl;
+            document.getElementById('secretText').textContent = data.secret;
+        } else {
+            showAuthError(data.error || 'Failed to initialize MFA setup');
+        }
+    } catch {
+        showAuthError('Connection error during MFA setup');
+    }
+
+    document.getElementById('setupForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const token = document.getElementById('setupToken').value;
+
+        try {
+            const res = await fetch('/api/admin/mfa-confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showDashboard();
+                toast('MFA Setup Successful!', 'success');
+            } else {
+                document.getElementById('setupError').textContent = data.error || 'Invalid token';
+                setTimeout(() => { document.getElementById('setupError').textContent = ''; }, 4000);
+            }
+        } catch {
+            document.getElementById('setupError').textContent = 'Connection error';
         }
     };
 }
@@ -82,7 +134,7 @@ function showOtpMode() {
             const res = await fetch('/api/mfa-verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ otp })
+                body: JSON.stringify({ token: otp })
             });
             const data = await res.json();
 
@@ -636,6 +688,18 @@ async function saveTheme() {
 async function changePassword() {
     // No-op, managed by Gmail
     toast('Manage your password via Google Account Settings', 'info');
+}
+
+async function reconfigureMFA() {
+    if (!confirm('Are you sure you want to reset your MFA? You will be logged out and need to scan a new QR code.')) return;
+    
+    // To reconfigure, we need to be authenticated.
+    // We'll call a reset route if we had one, or just show the setup screen.
+    // For now, let's just trigger a logout and then show setup if we clear the secret.
+    // Actually, let's just show the setup screen directly if authenticated.
+    showMfaSetup();
+    document.getElementById('authScreen').style.display = '';
+    document.getElementById('dashboard').style.display = 'none';
 }
 
 // ==========================================
